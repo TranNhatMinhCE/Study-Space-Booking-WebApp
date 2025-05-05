@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'apps.resources',
     'apps.bookings',
     'apps.users',
-    'apps.messages',
+    'apps.message',
 ]
 
 MIDDLEWARE = [
@@ -112,7 +112,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
 USE_I18N = True
 

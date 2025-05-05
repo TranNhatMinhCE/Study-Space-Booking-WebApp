@@ -1,1 +1,4 @@
+/BE/*.sqlite3
+/BE/media
 /venv
+__pycache__/
