@@ -44,7 +44,7 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.space.name} - {self.start_time}"
+        return f"{self.user.username} - {self.space.name}"
 
     @staticmethod
     def check_room_availability(studySpace, start_time, end_time):

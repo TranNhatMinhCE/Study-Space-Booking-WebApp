@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'drf_spectacular',
     'django_filters',
     'apps.resources',
     'apps.bookings',
@@ -131,3 +132,36 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email'
+EMAIL_HOST_PASSWORD = 'your-password'
+
+
+# Cấu hình DRF
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Sử dụng drf-spectacular làm schema mặc định
+    # Các cài đặt DRF khác (nếu có, ví dụ: phân quyền, phân trang)
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # Tùy chọn, nếu cần xác thực
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+}
+
+# Cấu hình drf-spectacular
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Study Space Booking API',  # Tiêu đề của API
+    'DESCRIPTION': 'API cho hệ thống đặt không gian học tập',  # Mô tả API
+    'VERSION': '1.0.0',  # Phiên bản API
+    'SERVE_INCLUDE_SCHEMA': True,  # Cho phép serve schema qua endpoint (cần kết hợp với urls.py)
+    # Các tùy chọn khác (tùy chỉnh thêm nếu cần)
+    'SCHEMA_PATH_PREFIX': '/api/',  # Đường dẫn tiền tố cho schema (phù hợp với cấu hình URL của bạn)
+    'SWAGGER_UI_SETTINGS': {
+        'docExpansion': 'none',  # Thu gọn tất cả các phần khi mở Swagger UI
+        'persistAuthorization': True,  # Lưu thông tin xác thực
+    },
+}
