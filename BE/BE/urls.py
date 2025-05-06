@@ -21,6 +21,8 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('apps.bookings.urls')),
-    path('api/', include('apps.resources.urls')),
+    path('api/bookings', include('apps.bookings.urls')),
+    path('api/resources', include('apps.resources.urls')),
+    path('api/users/', include('apps.users.urls')),   # URL cho ứng dụng quản lý người dùng
+    path('api/messages/', include('apps.message.urls')),  # URL cho ứng dụng phản hồi và thông báo
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

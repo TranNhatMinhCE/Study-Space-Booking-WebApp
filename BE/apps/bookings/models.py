@@ -1,6 +1,7 @@
+# bookings/models.py
 from django.db import models
-# from users.models import User
-from django.contrib.auth.models import User
+from apps.users.models import User
+# from django.contrib.auth.models import User
 from apps.resources.models import StudySpace
 import qrcode
 from django.core.files.base import ContentFile
