@@ -177,6 +177,11 @@ class NotificationCreateView(APIView):
 #         serializer = NotificationSerializer(page, many=True, context={'request': request})
 #         return paginator.get_paginated_response(serializer.data)
 
+# class StandardNotificationListSetPagination(PageNumberPagination):
+#     page_size = 10
+#     page_size_query_param = 'page_size'
+#     max_page_size = 100
+
 class NotificationListView(ListAPIView):
     pagination_class = PageNumberPagination
     serializer_class = NotificationSerializer

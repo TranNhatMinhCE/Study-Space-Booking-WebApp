@@ -98,6 +98,10 @@ def update_booking_status(booking_id, new_status):
     except Booking.DoesNotExist:
         raise ValidationError("Booking không tồn tại.")
 
+
+from celery import shared_task
+
+@shared_task
 def auto_update_booking_status():
     """Tự động cập nhật trạng thái booking nếu quá thời gian"""
     current_time = timezone.now()
@@ -123,3 +127,82 @@ def auto_update_booking_status():
             booking.space.save()
             return_equipment(booking)
             booking.save()
+
+from django.core.mail import EmailMessage
+from django.conf import settings
+from .models import  NotificationConfig
+
+
+@shared_task
+def send_checkin_reminder():
+    """Gửi thông báo trước giờ check-in"""
+    current_time = timezone.now()
+    config = NotificationConfig.get_config()
+    reminder_minutes = config.reminder_before_checkin_minutes
+
+    # Tìm các đặt phòng có start_time trong khoảng [current_time, current_time + reminder_minutes]
+    reminder_start = current_time
+    reminder_end = current_time + timedelta(minutes=reminder_minutes)
+    bookings = Booking.objects.filter(
+        status='CONFIRMED',
+        start_time__gte=reminder_start,
+        start_time__lte=reminder_end
+    )
+
+    for booking in bookings:
+        user_email = booking.user.email
+        if user_email:
+            html_content = (
+                f"Chào {booking.user.username},<br><br>"
+                f"Đây là thông báo nhắc nhở về đặt phòng của bạn:<br><br>"
+                f"- Phòng: {booking.space.name}<br>"
+                f"- Thời gian bắt đầu: {booking.start_time}<br>"
+                f"- Thời gian kết thúc: {booking.end_time}<br><br>"
+                f"Vui lòng check-in đúng giờ để sử dụng phòng.<br><br>"
+                f"Trân trọng,<br>Hệ thống"
+            )
+            email = EmailMessage(
+                'Nhắc nhở Check-in Đặt phòng',
+                html_content,
+                settings.EMAIL_HOST_USER,
+                [user_email],
+            )
+            email.content_subtype = "html"
+            email.send()
+
+@shared_task
+def send_checkout_reminder():
+    """Gửi thông báo trước khi hết thời gian sử dụng phòng"""
+    current_time = timezone.now()
+    config = NotificationConfig.get_config()
+    reminder_minutes = config.reminder_before_checkout_minutes
+
+    # Tìm các đặt phòng có end_time trong khoảng [current_time, current_time + reminder_minutes]
+    reminder_start = current_time
+    reminder_end = current_time + timedelta(minutes=reminder_minutes)
+    bookings = Booking.objects.filter(
+        status='CHECK_IN',
+        end_time__gte=reminder_start,
+        end_time__lte=reminder_end
+    )
+
+    for booking in bookings:
+        user_email = booking.user.email
+        if user_email:
+            html_content = (
+                f"Chào {booking.user.username},<br><br>"
+                f"Đây là thông báo nhắc nhở về việc sắp hết thời gian sử dụng phòng:<br><br>"
+                f"- Phòng: {booking.space.name}<br>"
+                f"- Thời gian bắt đầu: {booking.start_time}<br>"
+                f"- Thời gian kết thúc: {booking.end_time}<br><br>"
+                f"Vui lòng chuẩn bị check-out đúng giờ.<br><br>"
+                f"Trân trọng,<br>Hệ thống"
+            )
+            email = EmailMessage(
+                'Nhắc nhở Check-out Đặt phòng',
+                html_content,
+                settings.EMAIL_HOST_USER,
+                [user_email],
+            )
+            email.content_subtype = "html"
+            email.send()

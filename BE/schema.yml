@@ -1,0 +1,698 @@
+openapi: 3.0.3
+info:
+  title: Study Space Booking API
+  version: 1.0.0
+  description: API cho hệ thống đặt không gian học tập
+paths:
+  /api/bookings/:
+    get:
+      operationId: bookings_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - bookings
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedBookingList'
+          description: ''
+    post:
+      operationId: bookings_create
+      tags:
+      - bookings
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Booking'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Booking'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Booking'
+          description: ''
+  /api/equipment-types/:
+    get:
+      operationId: equipment_types_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - equipment-types
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedEquipmentTypeList'
+          description: ''
+    post:
+      operationId: equipment_types_create
+      tags:
+      - equipment-types
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquipmentType'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EquipmentType'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EquipmentType'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EquipmentType'
+          description: ''
+  /api/get-space-status/{room_id}/:
+    get:
+      operationId: get_space_status_retrieve
+      parameters:
+      - in: path
+        name: room_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - get-space-status
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/scan-qr/:
+    post:
+      operationId: scan_qr_create
+      tags:
+      - scan-qr
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/search-available-spaces/:
+    post:
+      operationId: search_available_spaces_create
+      description: Tìm kiếm không gian trống theo space_type và khung giờ
+      tags:
+      - search-available-spaces
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/study-spaces/:
+    get:
+      operationId: study_spaces_list
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - study-spaces
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStudySpaceList'
+          description: ''
+    post:
+      operationId: study_spaces_create
+      tags:
+      - study-spaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudySpace'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StudySpace'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StudySpace'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudySpace'
+          description: ''
+  /api/study-spaces/{id}/:
+    get:
+      operationId: study_spaces_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - study-spaces
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudySpace'
+          description: ''
+    put:
+      operationId: study_spaces_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - study-spaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudySpace'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StudySpace'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StudySpace'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudySpace'
+          description: ''
+    patch:
+      operationId: study_spaces_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - study-spaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStudySpace'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStudySpace'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStudySpace'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudySpace'
+          description: ''
+    delete:
+      operationId: study_spaces_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - study-spaces
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/update-booking-status/:
+    post:
+      operationId: update_booking_status_create
+      tags:
+      - update-booking-status
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          description: No response body
+components:
+  schemas:
+    Booking:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          type: string
+          readOnly: true
+        space_name:
+          type: string
+          readOnly: true
+        space_id:
+          type: integer
+          writeOnly: true
+        start_time:
+          type: string
+          format: date-time
+        end_time:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/BookingStatusEnum'
+        equipments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Equipment'
+          readOnly: true
+        equipment_requests:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          writeOnly: true
+        qr_code_url:
+          type: string
+          readOnly: true
+      required:
+      - end_time
+      - equipments
+      - id
+      - qr_code_url
+      - space_id
+      - space_name
+      - start_time
+      - user
+    BookingStatusEnum:
+      enum:
+      - CONFIRMED
+      - CHECK_IN
+      - CHECK_OUT
+      - CANCELLED
+      type: string
+      description: |-
+        * `CONFIRMED` - Đã xác nhận
+        * `CHECK_IN` - Đã check in
+        * `CHECK_OUT` - Đã check out
+        * `CANCELLED` - Đã hủy
+    Equipment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        equipment_type:
+          allOf:
+          - $ref: '#/components/schemas/EquipmentType'
+          readOnly: true
+        equipment_type_id:
+          type: integer
+          writeOnly: true
+        status:
+          $ref: '#/components/schemas/EquipmentStatusEnum'
+        booking:
+          type: integer
+          nullable: true
+      required:
+      - equipment_type
+      - equipment_type_id
+      - id
+    EquipmentStatusEnum:
+      enum:
+      - AVAILABLE
+      - BORROWED
+      - BROKEN
+      - MAINTENANCE
+      type: string
+      description: |-
+        * `AVAILABLE` - Available
+        * `BORROWED` - Borrowed
+        * `BROKEN` - broken
+        * `MAINTENANCE` - maintenance
+    EquipmentType:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 50
+        description:
+          type: string
+          nullable: true
+        total_quantity:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+      required:
+      - id
+      - name
+    PaginatedBookingList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Booking'
+    PaginatedEquipmentTypeList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/EquipmentType'
+    PaginatedStudySpaceList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StudySpace'
+    PatchedStudySpace:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        capacity:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        space_type:
+          $ref: '#/components/schemas/SpaceTypeEnum'
+        space_status:
+          $ref: '#/components/schemas/SpaceStatusEnum'
+    SpaceStatusEnum:
+      enum:
+      - EMPTY
+      - BOOKED
+      - INUSE
+      type: string
+      description: |-
+        * `EMPTY` - Empty
+        * `BOOKED` - Booked
+        * `INUSE` - In Use
+    SpaceTypeEnum:
+      enum:
+      - INDIVIDUAL
+      - GROUP
+      - MENTORING
+      type: string
+      description: |-
+        * `INDIVIDUAL` - Individual
+        * `GROUP` - Group
+        * `MENTORING` - Mentoring
+    StudySpace:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        capacity:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: -9223372036854775808
+          format: int64
+        space_type:
+          $ref: '#/components/schemas/SpaceTypeEnum'
+        space_status:
+          $ref: '#/components/schemas/SpaceStatusEnum'
+      required:
+      - capacity
+      - id
+      - name
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid

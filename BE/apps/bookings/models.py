@@ -1,4 +1,3 @@
-# bookings/models.py
 from django.db import models
 from apps.users.models import User
 # from django.contrib.auth.models import User
@@ -45,7 +44,7 @@ class Booking(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.space.name} - {self.start_time}"
+        return f"{self.user.username} - {self.space.name}"
 
     @staticmethod
     def check_room_availability(studySpace, start_time, end_time):
@@ -162,3 +161,27 @@ class QRCode(models.Model):
     
     def __str__(self):
         return f"QR Code for Booking {self.booking.id}"
+
+
+class NotificationConfig(models.Model):
+    reminder_before_checkin_minutes = models.PositiveIntegerField(
+        default=15,
+        help_text="Số phút trước giờ check-in để gửi thông báo (mặc định: 15 phút)."
+    )
+    reminder_before_checkout_minutes = models.PositiveIntegerField(
+        default=10,
+        help_text="Số phút trước giờ kết thúc để gửi thông báo (mặc định: 10 phút)."
+    )
+
+    class Meta:
+        verbose_name = "Cấu hình thông báo"
+        verbose_name_plural = "Cấu hình thông báo"
+
+    def __str__(self):
+        return f"Thông báo: {self.reminder_before_checkin_minutes} phút trước check-in, {self.reminder_before_checkout_minutes} phút trước check-out"
+
+    @classmethod
+    def get_config(cls):
+        # Luôn lấy bản ghi đầu tiên, nếu không tồn tại thì tạo mới
+        config, created = cls.objects.get_or_create(pk=1)
+        return config
