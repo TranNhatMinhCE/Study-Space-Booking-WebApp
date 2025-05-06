@@ -164,4 +164,26 @@ SPECTACULAR_SETTINGS = {
         'docExpansion': 'none',  # Thu gọn tất cả các phần khi mở Swagger UI
         'persistAuthorization': True,  # Lưu thông tin xác thực
     },
+    'SERVERS': [
+        # {
+        #     'url': '{protocol}://{host}',  # Dùng biến protocol và host
+        #     'description': 'Dynamic Server',
+        #     'variables': {
+        #         'protocol': {
+        #             'default': 'http',
+        #             'enum': ['http', 'https'],
+        #             'description': 'Giao thức của máy chủ'
+        #         },
+        #         'host': {
+        #             'default': 'api.example.org',
+        #             'description': 'Địa chỉ máy chủ'
+        #         }
+        #     }
+        # },
+        {
+            'url': 'http://localhost:8000',
+            'description': 'Local Development Server',
+        },
+    ],
 }
+
