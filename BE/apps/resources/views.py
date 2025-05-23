@@ -143,9 +143,52 @@ def search_available_spaces(request):
 
 
 class SpacesUsageAPIView(APIView):
-    # API SpacesUsageAPIView để trả về trạng thái và lịch đặt phòng từ hiện tại đến hết ngày.
+    """
+    API SpacesUsageAPIView để trả về trạng thái và lịch đặt phòng từ hiện tại đến hết ngày.
+    """
     permission_classes = [IsAuthenticated]
 
+    @extend_schema(
+        operation_id="spaces_usage",
+        summary="Lấy trạng thái và lịch đặt phòng của các không gian học tập",
+        description="API này trả về trạng thái và lịch đặt phòng của tất cả các không gian học tập từ thời điểm hiện tại đến hết ngày.",
+        responses={
+            200: {
+                'type': 'object',
+                'properties': {
+                    'current_time': {'type': 'string', 'format': 'date-time', 'example': '2025-05-08T14:00:00+07:00'},
+                    'spaces': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'object',
+                            'properties': {
+                                'id': {'type': 'integer', 'example': 1},
+                                'name': {'type': 'string', 'example': 'Phòng học A'},
+                                'status': {'type': 'string', 'example': 'EMPTY'},
+                                'bookings': {
+                                    'type': 'array',
+                                    'items': {
+                                        'type': 'object',
+                                        'properties': {
+                                            'start_time': {'type': 'string', 'format': 'date-time', 'example': '2025-05-08T08:00:00+07:00'},
+                                            'end_time': {'type': 'string', 'format': 'date-time', 'example': '2025-05-08T10:00:00+07:00'},
+                                            'user': {'type': 'string', 'example': 'john_doe'},
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+            401: {
+                'type': 'object',
+                'properties': {
+                    'detail': {'type': 'string', 'example': 'Authentication credentials were not provided.'},
+                },
+            },
+        },
+    )
     def get(self, request):
         current_time = timezone.now()
         spaces = StudySpace.objects.all()

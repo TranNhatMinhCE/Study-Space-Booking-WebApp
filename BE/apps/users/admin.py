@@ -33,6 +33,7 @@ class StudentAdmin(BaseUserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'user_id', 'get_major', 'is_active', 'get_direct_permissions')
     search_fields = ('username', 'email', 'first_name', 'last_name', 'user_id')
     list_filter = ('is_active', 'groups')
+    readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Personal Info', {'fields': ('email', 'first_name', 'last_name', 'user_id', 'phone_number', 'address')}),
@@ -40,7 +41,7 @@ class StudentAdmin(BaseUserAdmin):
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
             'description': 'Quản lý nhóm và quyền của người dùng. Gán quyền trực tiếp để áp dụng cho cá nhân.'
         }),
-        ('Important dates', {'fields': ('last_login', 'date_joined', 'created_at', 'updated_at')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {
@@ -68,6 +69,7 @@ class TeacherAdmin(BaseUserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'user_id', 'get_department', 'is_active', 'get_direct_permissions')
     search_fields = ('username', 'email', 'first_name', 'last_name', 'user_id')
     list_filter = ('is_active', 'groups')
+    readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Personal Info', {'fields': ('email', 'first_name', 'last_name', 'user_id', 'phone_number', 'address')}),
@@ -75,7 +77,7 @@ class TeacherAdmin(BaseUserAdmin):
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
             'description': 'Quản lý nhóm và quyền của người dùng. Gán quyền trực tiếp để áp dụng cho cá nhân.'
         }),
-        ('Important dates', {'fields': ('last_login', 'date_joined', 'created_at', 'updated_at')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {
@@ -103,6 +105,7 @@ class ManagerAdmin(BaseUserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'user_id', 'get_role_description', 'is_active', 'get_direct_permissions')
     search_fields = ('username', 'email', 'first_name', 'last_name', 'user_id')
     list_filter = ('is_active', 'groups')
+    readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Personal Info', {'fields': ('email', 'first_name', 'last_name', 'user_id', 'phone_number', 'address')}),
@@ -110,7 +113,7 @@ class ManagerAdmin(BaseUserAdmin):
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
             'description': 'Quản lý nhóm và quyền của người dùng. Gán quyền trực tiếp để áp dụng cho cá nhân.'
         }),
-        ('Important dates', {'fields': ('last_login', 'date_joined', 'created_at', 'updated_at')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {
@@ -138,11 +141,12 @@ class SuperUserAdmin(BaseUserAdmin):
     list_display = ('username', 'email', 'first_name', 'last_name', 'get_staff_id', 'is_active')
     search_fields = ('username', 'email', 'first_name', 'last_name')
     list_filter = ('is_active',)
+    readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Personal Info', {'fields': ('email', 'first_name', 'last_name', 'phone_number', 'address')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined', 'created_at', 'updated_at')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {

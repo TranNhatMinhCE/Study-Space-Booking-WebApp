@@ -30,7 +30,6 @@ def validate_qr_data(qr_code_id, qr_data):
         end_time_str = time_parts[1].strip()
         start_time = parse(start_time_str)
         end_time = parse(end_time_str)
-        print(f"Time check: current={current_time}, start={start_time}, end={end_time}")
         if not (start_time <= current_time <= end_time):
             print(f"Time mismatch: current_time={current_time}, start_time={start_time}, end_time={end_time}")
             return False

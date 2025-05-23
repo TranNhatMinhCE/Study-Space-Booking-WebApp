@@ -1,4 +1,5 @@
 /BE/*.sqlite3
 /BE/media
+/BE/celerybeat-schedule
 /venv
 __pycache__/

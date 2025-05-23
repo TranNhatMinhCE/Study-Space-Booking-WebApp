@@ -16,33 +16,76 @@ class StudentProfileSerializer(serializers.ModelSerializer):
     Serializer cho StudentProfile.
     - Bao gồm thông tin từ User thông qua trường user.
     """
-    user = UserSerializer(read_only=True)
+    user = UserSerializer()
 
     class Meta:
         model = StudentProfile
         fields = ['user', 'major']
+    
+    def update(self, instance, validated_data):
+        # Xử lý cập nhật trường lồng nhau [user](http://_vscodecontentref_/5)
+        user_data = validated_data.pop('user', None)
+        if user_data:
+            for attr, value in user_data.items():
+                setattr(instance.user, attr, value)
+            instance.user.save()
+
+        # Cập nhật các trường khác trong [ManagerProfile](http://_vscodecontentref_/6)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        return instance
 
 class TeacherProfileSerializer(serializers.ModelSerializer):
     """
     Serializer cho TeacherProfile.
     - Bao gồm thông tin từ User thông qua trường user.
     """
-    user = UserSerializer(read_only=True)
+    user = UserSerializer()
 
     class Meta:
         model = TeacherProfile
         fields = ['user', 'department']
 
+    def update(self, instance, validated_data):
+        # Xử lý cập nhật trường lồng nhau [user](http://_vscodecontentref_/5)
+        user_data = validated_data.pop('user', None)
+        if user_data:
+            for attr, value in user_data.items():
+                setattr(instance.user, attr, value)
+            instance.user.save()
+
+        # Cập nhật các trường khác trong [ManagerProfile](http://_vscodecontentref_/6)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        return instance
 class ManagerProfileSerializer(serializers.ModelSerializer):
     """
     Serializer cho ManagerProfile.
     - Bao gồm thông tin từ User thông qua trường user.
     """
-    user = UserSerializer(read_only=True)
+    user = UserSerializer()
 
     class Meta:
         model = ManagerProfile
         fields = ['user', 'role_description']
+    def update(self, instance, validated_data):
+        # Xử lý cập nhật trường lồng nhau [user](http://_vscodecontentref_/5)
+        user_data = validated_data.pop('user', None)
+        if user_data:
+            for attr, value in user_data.items():
+                setattr(instance.user, attr, value)
+            instance.user.save()
+
+        # Cập nhật các trường khác trong [ManagerProfile](http://_vscodecontentref_/6)
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        return instance
 
 class RegisterSerializer(serializers.ModelSerializer):
     """

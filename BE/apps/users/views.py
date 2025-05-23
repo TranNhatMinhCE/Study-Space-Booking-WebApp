@@ -11,8 +11,116 @@ from django.utils import timezone
 from datetime import datetime, timedelta
 from apps.resources.models import StudySpace
 from apps.bookings.models import Booking, Equipment
-
+from dateutil.parser import isoparse
+from drf_spectacular.utils import extend_schema, OpenApiExample, OpenApiParameter, extend_schema_view
 # Class UserAPIView
+@extend_schema(
+    operation_id="user_actions",
+    summary="Xử lý các hành động của người dùng",
+    description="API này xử lý các hành động như đăng ký, đăng nhập và đăng xuất, được xác định bởi tham số `action`.",
+    parameters=[
+        OpenApiParameter(
+            name="action",
+            description="Hành động cần thực hiện (register, login, logout)",
+            required=True,
+            type=str,
+            examples=[
+                OpenApiExample(name="Register", value="register", description="Đăng ký người dùng mới"),
+                OpenApiExample(name="Login", value="login", description="Đăng nhập người dùng"),
+                OpenApiExample(name="Logout", value="logout", description="Đăng xuất người dùng"),
+            ]
+        ),
+    ],
+    request={
+        'application/json': {
+            'oneOf': [
+                # Register Request
+                {
+                    'title': 'Register',
+                    'type': 'object',
+                    'properties': {
+                        'username': {'type': 'string', 'example': 'john'},
+                        'password': {'type': 'string', 'example': 'secret'},
+                        'email': {'type': 'string', 'example': 'john@example.com'},
+                    },
+                    'required': ['username', 'password', 'email'],
+                },
+                # Login Request
+                {
+                    'title': 'Login',
+                    'type': 'object',
+                    'properties': {
+                        'username': {'type': 'string', 'example': 'john'},
+                        'password': {'type': 'string', 'example': 'secret'},
+                    },
+                    'required': ['username', 'password'],
+                },
+                # Logout Request (optional token only)
+                {
+                    'title': 'Logout',
+                    'type': 'object',
+                    'properties': {
+                        'refresh': {'type': 'string', 'example': 'refresh_token_here'},
+                    },
+                    'required': ['refresh'],
+                },
+            ]
+        }
+    },
+    responses={
+        201: {
+            'description': 'User registered',
+            'type': 'object',
+            'properties': {
+                'id': {'type': 'integer'},
+                'username': {'type': 'string'},
+                'email': {'type': 'string'},
+            },
+        },
+        200: {
+            'description': 'Login/Logout successful',
+            'oneOf': [
+                {
+                    'title': 'Login Response',
+                    'type': 'object',
+                    'properties': {
+                        'refresh': {'type': 'string', 'example': 'refresh_token'},
+                        'access': {'type': 'string', 'example': 'access_token'},
+                        'user': {
+                            'type': 'object',
+                            'properties': {
+                                'id': {'type': 'integer'},
+                                'username': {'type': 'string'},
+                            }
+                        }
+                    }
+                },
+                {
+                    'title': 'Logout Response',
+                    'type': 'object',
+                    'properties': {
+                        'message': {'type': 'string', 'example': 'Logout successful'}
+                    }
+                }
+            ]
+        },
+        400: {
+            'description': 'Dữ liệu không hợp lệ',
+            'type': 'object',
+            'properties': {
+                'error': {'type': 'string', 'example': 'Invalid input'}
+            }
+        },
+        401: {
+            'description': 'Xác thực thất bại',
+            'type': 'object',
+            'properties': {
+                'error': {'type': 'string', 'example': 'Invalid credentials'}
+            }
+        }
+    }
+)
+
 class UserAPIView(APIView):
     """
     Class cha xử lý các chức năng chung của người dùng.
@@ -86,6 +194,22 @@ class UserAPIView(APIView):
                 )
 
 # Class StudentAPIView
+
+@extend_schema_view(
+    get=extend_schema(
+        operation_id="student_profile",
+        summary="Xem profile của sinh viên",
+        description="API này trả về thông tin profile của sinh viên hiện tại.",
+        responses={200: StudentProfileSerializer},
+    ),
+    put=extend_schema(
+        operation_id="update_student_profile",
+        summary="Cập nhật profile của sinh viên",
+        description="API này cho phép sinh viên cập nhật thông tin profile của chính mình.",
+        request=StudentProfileSerializer,
+        responses={200: StudentProfileSerializer, 400: {'type': 'object', 'properties': {'error': {'type': 'string'}}}},
+    ),
+)
 class StudentAPIView(UserAPIView):
     """
     Class xử lý các chức năng của sinh viên.
@@ -120,6 +244,21 @@ class StudentAPIView(UserAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Class TeacherAPIView
+@extend_schema_view(
+    get=extend_schema(
+        operation_id="teacher_profile",
+        summary="Xem profile của giảng viên",
+        description="API này trả về thông tin profile của giảng viên hiện tại.",
+        responses={200: TeacherProfileSerializer},
+    ),
+    put=extend_schema(
+        operation_id="update_teacher_profile",
+        summary="Cập nhật profile của giảng viên",
+        description="API này cho phép giảng viên cập nhật thông tin profile của chính mình.",
+        request=TeacherProfileSerializer,
+        responses={200: TeacherProfileSerializer, 400: {'type': 'object', 'properties': {'error': {'type': 'string'}}}},
+    ),
+)
 class TeacherAPIView(UserAPIView):
     """
     Class xử lý các chức năng của giảng viên.
@@ -151,6 +290,38 @@ class TeacherAPIView(UserAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # Class ManagerAPIView
+@extend_schema_view(
+    get=extend_schema(
+        operation_id="manager_actions",
+        summary="Xử lý các hành động của ban quản lý",
+        description="API này hỗ trợ xem profile, danh sách người dùng, và tạo báo cáo thống kê.",
+        parameters=[
+            OpenApiParameter(
+                name="action",
+                description="Hành động cần thực hiện (profile, list-users, report, report-overview, report-detailed)",
+                required=True,
+                type=str,
+                examples=[
+                    OpenApiExample(name="Profile", value="profile", description="Xem profile của ban quản lý"),
+                    OpenApiExample(name="List Users", value="list-users", description="Xem danh sách người dùng"),
+                    OpenApiExample(name="Report", value="report", description="Tạo báo cáo thống kê"),
+                    OpenApiExample(name="Report Overview", value="report-overview", description="Báo cáo tổng quan"),
+                    OpenApiExample(name="Report Detailed", value="report-detailed", description="Báo cáo chi tiết"),
+                ],
+            )
+        ],
+        responses={
+            200: {
+                'type': 'object',
+                'properties': {
+                    'users': {'type': 'object', 'example': {'total_users': 100, 'students': 50, 'teachers': 30}},
+                    'spaces': {'type': 'object', 'example': {'total_spaces': 20, 'empty_spaces': 10}},
+                },
+            },
+            403: {'type': 'object', 'properties': {'error': {'type': 'string', 'example': 'Permission denied'}}},
+        },
+    )
+)
 class ManagerAPIView(UserAPIView):
     """
     Class xử lý các chức năng của ban quản lý.
@@ -271,13 +442,14 @@ class ManagerAPIView(UserAPIView):
             # Lấy khoảng thời gian từ query params
             start_time_str = request.query_params.get('start_time')
             end_time_str = request.query_params.get('end_time')
-
             try:
-                start_time = datetime.fromisoformat(start_time_str.replace('Z', '+00:00')) if start_time_str else timezone.now() - timedelta(days=30)
-                end_time = datetime.fromisoformat(end_time_str.replace('Z', '+00:00')) if end_time_str else timezone.now()
+                start_time_str = start_time_str.replace(' ', '+') if start_time_str else None #Mã hóa lại khoảng trắng thành dấu cộng sau khi truyền qua URL
+                end_time_str = end_time_str.replace(' ', '+') if end_time_str else None
+                start_time = isoparse(start_time_str) if start_time_str else timezone.now() - timedelta(days=30)
+                end_time = isoparse(end_time_str) if end_time_str else timezone.now()
             except ValueError:
                 return Response(
-                    {'error': 'Invalid date format. Use ISO format (e.g., 2025-05-01T00:00:00Z).'},
+                    {'error': 'Invalid date format. Use ISO format (e.g., 2025-05-01T00:00:00Z or +..,07:00).'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
 

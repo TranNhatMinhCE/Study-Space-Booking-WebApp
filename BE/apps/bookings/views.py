@@ -171,7 +171,42 @@ def update_booking_status_view(request):
         return Response({'error': 'Booking không tồn tại'}, status=404)
     except ValidationError as e:
         return Response({'error': str(e)}, status=400)
-    
+
+@extend_schema(
+    operation_id="cancel_booking",
+    summary="Hủy đặt phòng",
+    description="API này cho phép người dùng hủy một đặt phòng. Chỉ người quản lý hoặc người dùng sở hữu đặt phòng ở trạng thái 'CONFIRMED' mới có quyền hủy.",
+    parameters=[
+        {
+            'name': 'booking_id',
+            'in': 'path',
+            'required': True,
+            'description': 'ID của đặt phòng cần hủy',
+            'schema': {'type': 'integer', 'example': 1},
+        }
+    ],
+    responses={
+        200: BookingSerializer,
+        403: {
+            'type': 'object',
+            'properties': {
+                'error': {'type': 'string', 'example': 'Bạn không có quyền hủy đặt phòng này'},
+            },
+        },
+        404: {
+            'type': 'object',
+            'properties': {
+                'error': {'type': 'string', 'example': 'Booking không tồn tại'},
+            },
+        },
+        400: {
+            'type': 'object',
+            'properties': {
+                'error': {'type': 'string', 'example': 'Trạng thái không hợp lệ'},
+            },
+        },
+    },
+) 
 @api_view(['POST'])
 def cancel_booking(request, booking_id):
     try:
