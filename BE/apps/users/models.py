@@ -11,10 +11,11 @@ class User(AbstractUser):
         ('student', 'Sinh viên'),
         ('teacher', 'Giảng viên'),
         ('manager', 'Ban quản lý'),
+        ('admin', 'Quản trị viên'),
     )
 
     # full_name = models.CharField(max_length=100, blank=True, null=True)  # Tên đầy đủ của người dùng
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='student')  # Vai trò của người dùng
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='admin')  # Vai trò của người dùng
     user_id = models.CharField(max_length=20, blank=True, null=True, unique=True)  # Mã định danh chung (thay cho student_id và staff_id)
     phone_number = models.CharField(max_length=15, blank=True, null=True)  # Số điện thoại
     address = models.TextField(blank=True, null=True)  # Địa chỉ
@@ -30,17 +31,17 @@ class User(AbstractUser):
             ('generate_report', 'Can generate user report'),
         ]
 
-    # def save(self, *args, **kwargs):
-    #     """
-    #     Ghi đè phương thức save để tự động gán user vào Group tương ứng với role.
-    #     Ví dụ: role='student' -> gán vào group 'Students'.
-    #     """
-    #     if not self.pk or not self.groups.exists():
-    #         super().save(*args, **kwargs)
-    #         group, _ = Group.objects.get_or_create(name=self.role.capitalize() + 's')
-    #         self.groups.add(group)
-    #     else:
-    #         super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        """
+        Ghi đè phương thức save để tự động gán user vào Group tương ứng với role.
+        Ví dụ: role='student' -> gán vào group 'Students'.
+        """
+        super().save(*args, **kwargs)
+        # Chỉ gán nhóm mặc định nếu user chưa thuộc nhóm nào
+        if not self.groups.exists():
+            group_name = self.role.capitalize() + 's'
+            group, _ = Group.objects.get_or_create(name=group_name)
+            self.groups.add(group)
 
     def __str__(self):
         return self.username

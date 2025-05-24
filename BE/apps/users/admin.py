@@ -1,165 +1,113 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, StudentProfile, TeacherProfile, ManagerProfile, SuperUserProfile, Student, Teacher, Manager , SuperUser
+from django.contrib.auth.admin import UserAdmin, GroupAdmin
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
+from .models import User, StudentProfile, TeacherProfile, ManagerProfile, SuperUserProfile
+from django.contrib import messages
+from django import forms
 
-# Inline để hiển thị profile
-class StudentProfileInline(admin.StackedInline):
-    model = StudentProfile
-    can_delete = False
-    verbose_name_plural = 'Student Profile'
-    fk_name = 'user'
+# Hủy đăng ký Group mặc định để sử dụng GroupAdmin tùy chỉnh
+admin.site.unregister(Group)
 
-class TeacherProfileInline(admin.StackedInline):
-    model = TeacherProfile
-    can_delete = False
-    verbose_name_plural = 'Teacher Profile'
-    fk_name = 'user'
-
-class ManagerProfileInline(admin.StackedInline):
-    model = ManagerProfile
-    can_delete = False
-    verbose_name_plural = 'Manager Profile'
-    fk_name = 'user'
-
-class SuperUserProfileInline(admin.StackedInline):
-    model = SuperUserProfile
-    can_delete = False
-    verbose_name_plural = 'Superuser Profile'
-    fk_name = 'user'
-
-# Admin cho proxy model Student
-@admin.register(Student)
-class StudentAdmin(BaseUserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'user_id', 'get_major', 'is_active', 'get_direct_permissions')
-    search_fields = ('username', 'email', 'first_name', 'last_name', 'user_id')
-    list_filter = ('is_active', 'groups')
-    readonly_fields = ('created_at', 'updated_at')
+@admin.register(User)
+class CustomUserAdmin(UserAdmin):
+    list_display = ('username', 'email', 'role', 'user_id', 'is_staff', 'is_superuser', 'groups_display')
+    list_filter = ('role', 'groups', 'is_staff', 'is_superuser')
+    search_fields = ('username', 'email', 'user_id')
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        ('Personal Info', {'fields': ('email', 'first_name', 'last_name', 'user_id', 'phone_number', 'address')}),
-        ('Permissions', {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
-            'description': 'Quản lý nhóm và quyền của người dùng. Gán quyền trực tiếp để áp dụng cho cá nhân.'
-        }),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'role', 'user_id', 'phone_number', 'address')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined', 'created_at', 'updated_at')}),
     )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'first_name', 'last_name', 'user_id'),
-        }),
-    )
-    inlines = [StudentProfileInline]
-    ordering = ('username',)
+    filter_horizontal = ('groups', 'user_permissions')  # Giao diện kéo-thả cho groups và permissions
+    
+    actions = ['assign_to_group', 'remove_from_group']  # Thêm hành động hàng loạt
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(role='student', is_superuser=False)
+    def groups_display(self, obj):
+        """Hiển thị danh sách nhóm của user trong danh sách"""
+        return ", ".join([group.name for group in obj.groups.all()])
+    groups_display.short_description = 'Groups'
 
-    def get_major(self, obj):
-        return obj.student_profile.major if hasattr(obj, 'student_profile') else '-'
-    get_major.short_description = 'Major'
+    def assign_to_group(self, request, queryset):
+        group_id = request.POST.get('group_id')
+        if not group_id:
+            self.message_user(request, "Vui lòng chọn một nhóm để gán.", level=messages.ERROR)
+            return
+        try:
+            group = Group.objects.get(id=group_id)
+            for user in queryset:
+                user.groups.add(group)
+            self.message_user(request, f"Đã gán {queryset.count()} user vào nhóm {group.name}.", level=messages.SUCCESS)
+        except Group.DoesNotExist:
+            self.message_user(request, "Nhóm không tồn tại.", level=messages.ERROR)
 
-    def get_direct_permissions(self, obj):
-        return ", ".join([perm.codename for perm in obj.user_permissions.all()])
-    get_direct_permissions.short_description = 'Direct Permissions'
+    assign_to_group.short_description = "Gán user vào nhóm"
 
-# Admin cho proxy model Teacher
-@admin.register(Teacher)
-class TeacherAdmin(BaseUserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'user_id', 'get_department', 'is_active', 'get_direct_permissions')
-    search_fields = ('username', 'email', 'first_name', 'last_name', 'user_id')
-    list_filter = ('is_active', 'groups')
-    readonly_fields = ('created_at', 'updated_at')
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal Info', {'fields': ('email', 'first_name', 'last_name', 'user_id', 'phone_number', 'address')}),
-        ('Permissions', {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
-            'description': 'Quản lý nhóm và quyền của người dùng. Gán quyền trực tiếp để áp dụng cho cá nhân.'
-        }),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'first_name', 'last_name', 'user_id'),
-        }),
-    )
-    inlines = [TeacherProfileInline]
-    ordering = ('username',)
+    def remove_from_group(self, request, queryset):
+        group_id = request.POST.get('group_id')
+        if not group_id:
+            self.message_user(request, "Vui lòng chọn một nhóm để bỏ.", level=messages.ERROR)
+            return
+        try:
+            group = Group.objects.get(id=group_id)
+            for user in queryset:
+                user.groups.remove(group)
+            self.message_user(request, f"Đã bỏ {queryset.count()} user khỏi nhóm {group.name}.", level=messages.SUCCESS)
+        except Group.DoesNotExist:
+            self.message_user(request, "Nhóm không tồn tại.", level=messages.ERROR)
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(role='teacher', is_superuser=False)
+    remove_from_group.short_description = "Bỏ user khỏi nhóm"
 
-    def get_department(self, obj):
-        return obj.teacher_profile.department if hasattr(obj, 'teacher_profile') else '-'
-    get_department.short_description = 'Department'
+    def get_form(self, request, obj=None, **kwargs):
+        # print("Form fields:", form.base_fields)
+        form = super().get_form(request, obj, **kwargs)
+        if 'assign_to_group' in self.actions or 'remove_from_group' in self.actions:
+            print("Adding group_id field to form") 
+            form.base_fields['group_id'] = forms.ChoiceField(
+                choices=[('', '---------')] + [(g.id, g.name) for g in Group.objects.all()],
+                required=False,
+                label="Chọn nhóm"
+            )
+        return form
 
-    def get_direct_permissions(self, obj):
-        return ", ".join([perm.codename for perm in obj.user_permissions.all()])
-    get_direct_permissions.short_description = 'Direct Permissions'
+@admin.register(Group)
+class CustomGroupAdmin(GroupAdmin):
+    list_display = ('name', 'permission_count', 'user_count')
+    list_filter = ('permissions__content_type__app_label',)  # Lọc theo ứng dụng
+    search_fields = ('name',)
+    filter_horizontal = ('permissions',)
 
-# Admin cho proxy model Manager
-@admin.register(Manager)
-class ManagerAdmin(BaseUserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'user_id', 'get_role_description', 'is_active', 'get_direct_permissions')
-    search_fields = ('username', 'email', 'first_name', 'last_name', 'user_id')
-    list_filter = ('is_active', 'groups')
-    readonly_fields = ('created_at', 'updated_at')
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal Info', {'fields': ('email', 'first_name', 'last_name', 'user_id', 'phone_number', 'address')}),
-        ('Permissions', {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
-            'description': 'Quản lý nhóm và quyền của người dùng. Gán quyền trực tiếp để áp dụng cho cá nhân.'
-        }),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'first_name', 'last_name', 'user_id'),
-        }),
-    )
-    inlines = [ManagerProfileInline]
-    ordering = ('username',)
+    def permission_count(self, obj):
+        return obj.permissions.count()
+    permission_count.short_description = 'Number of Permissions'
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(role='manager', is_superuser=False)
+    def user_count(self, obj):
+        return obj.user_set.count()
+    user_count.short_description = 'Number of Users'
 
-    def get_role_description(self, obj):
-        return obj.manager_profile.role_description if hasattr(obj, 'manager_profile') else '-'
-    get_role_description.short_description = 'Role Description'
+@admin.register(Permission)
+class PermissionAdmin(admin.ModelAdmin):
+    list_display = ('name', 'codename', 'content_type')
+    list_filter = ('content_type__app_label',)
+    search_fields = ('name', 'codename')
 
-    def get_direct_permissions(self, obj):
-        return ", ".join([perm.codename for perm in obj.user_permissions.all()])
-    get_direct_permissions.short_description = 'Direct Permissions'
+@admin.register(StudentProfile)
+class StudentProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'major')
+    search_fields = ('user__username', 'major')
 
-# Admin cho proxy model SuperUser
-@admin.register(SuperUser)
-class SuperUserAdmin(BaseUserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'get_staff_id', 'is_active')
-    search_fields = ('username', 'email', 'first_name', 'last_name')
-    list_filter = ('is_active',)
-    readonly_fields = ('created_at', 'updated_at')
-    fieldsets = (
-        (None, {'fields': ('username', 'password')}),
-        ('Personal Info', {'fields': ('email', 'first_name', 'last_name', 'phone_number', 'address')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser')}),
-        ('Important dates', {'fields': ('last_login', 'date_joined')}),
-    )
-    add_fieldsets = (
-        (None, {
-            'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'first_name', 'last_name'),
-        }),
-    )
-    inlines = [SuperUserProfileInline]
-    ordering = ('username',)
+@admin.register(TeacherProfile)
+class TeacherProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'department')
+    search_fields = ('user__username', 'department')
 
-    def get_queryset(self, request):
-        return super().get_queryset(request).filter(is_superuser=True)
+@admin.register(ManagerProfile)
+class ManagerProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'role_description')
+    search_fields = ('user__username', 'role_description')
 
-    def get_staff_id(self, obj):
-        return obj.superuser_profile.staff_id if hasattr(obj, 'superuser_profile') else '-'
-    get_staff_id.short_description = 'Staff ID'
+@admin.register(SuperUserProfile)
+class SuperUserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'staff_id')
+    search_fields = ('user__username', 'staff_id')
