@@ -40,11 +40,15 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
+    'drf_spectacular',
     'django_filters',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    'django_celery_beat',
     'apps.resources',
     'apps.bookings',
     'apps.users',
-    'apps.messages',
+    'apps.message',
 ]
 
 MIDDLEWARE = [
@@ -112,7 +116,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Ho_Chi_Minh'
 
 USE_I18N = True
 
@@ -128,3 +132,107 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your-email'
+EMAIL_HOST_PASSWORD = 'your-password-app'
+
+
+# Cấu hình DRF
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),    
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',  # Sử dụng drf-spectacular làm schema mặc định
+    # Các cài đặt DRF khác (nếu có, ví dụ: phân quyền, phân trang)
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # Tùy chọn, nếu cần xác thực
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10,
+    'DATETIME_INPUT_FORMATS': [
+        "%Y-%m-%dT%H:%M:%SZ",
+        "%Y-%m-%dT%H:%M:%S%z",
+    ],
+}
+
+# Cấu hình drf-spectacular
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Study Space Booking API',  # Tiêu đề của API
+    'DESCRIPTION': 'API cho hệ thống đặt không gian học tập',  # Mô tả API
+    'VERSION': '1.0.0',  # Phiên bản API
+    'SERVE_INCLUDE_SCHEMA': True,  # Cho phép serve schema qua endpoint (cần kết hợp với urls.py)
+    # Các tùy chọn khác (tùy chỉnh thêm nếu cần)
+    'SCHEMA_PATH_PREFIX': '/api/',  # Đường dẫn tiền tố cho schema (phù hợp với cấu hình URL của bạn)
+    'SWAGGER_UI_SETTINGS': {
+        'docExpansion': 'none',  # Thu gọn tất cả các phần khi mở Swagger UI
+        'persistAuthorization': True,  # Lưu thông tin xác thực
+    },
+    'SERVERS': [
+        # {
+        #     'url': '{protocol}://{host}',  # Dùng biến protocol và host
+        #     'description': 'Dynamic Server',
+        #     'variables': {
+        #         'protocol': {
+        #             'default': 'http',
+        #             'enum': ['http', 'https'],
+        #             'description': 'Giao thức của máy chủ'
+        #         },
+        #         'host': {
+        #             'default': 'api.example.org',
+        #             'description': 'Địa chỉ máy chủ'
+        #         }
+        #     }
+        # },
+        {
+            'url': 'http://localhost:8000',
+            'description': 'Local Development Server',
+        },
+    ],
+}
+
+
+
+#------------------------------Apps.User---------------------------------#
+AUTH_USER_MODEL = 'users.User'
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # Thời gian sống của access token nên nhỏ
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'BLACKLIST_AFTER_ROTATION': True,
+    'AUTH_HEADER_TYPES': ('Bearer',),
+}
+#------------------------------------------------------------------------#
+
+# Cấu hình Redis làm message broker
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Ho_Chi_Minh'
+
+from celery.schedules import crontab
+
+CELERY_BEAT_SCHEDULE = {
+    'auto-update-booking-status-every-5-minutes': {
+        'task': 'apps.bookings.services.auto_update_booking_status',
+        'schedule': crontab(minute='*/5'),  # Chạy mỗi 5 phút
+    },
+        'send-checkin-reminder-every-minute': {
+        'task': 'apps.bookings.services.send_checkin_reminder',
+        'schedule': crontab(minute='*'),  # Chạy mỗi phút
+    },
+    'send-checkout-reminder-every-minute': {
+        'task': 'apps.bookings.services.send_checkout_reminder',
+        'schedule': crontab(minute='*'),  # Chạy mỗi phút
+    },
+}

@@ -1,0 +1,60 @@
+# Các bước để cài đặt và tự động khởi động Redis server trên WSL
+
+## Bước 1: Cập nhật danh sách gói (chạy lần đầu hoặc định kỳ)
+wsl
+sudo apt update
+
+## Bước 2: Cài đặt Redis server
+sudo apt install redis-server -y
+
+## Bước 3: Kiểm tra trạng thái Redis server (tùy chọn)
+sudo systemctl status redis-server
+
+## Bước 4: Bật Redis server tự động khởi động khi boot hệ thống WSL
+sudo systemctl enable redis-server.service
+
+## Bước 5: Khởi động Redis server ngay lập tức (nếu chưa chạy)
+sudo systemctl start redis-server
+
+## Bước 6: (Tùy chọn) Kiểm tra xem Redis có hoạt động không
+redis-cli ping
+# Nếu trả về "PONG", Redis đang chạy.
+
+## Bước 7: Cấu hình tự động chạy khi mở WSL (sử dụng .bashrc hoặc .zshrc)
+
+# Mở file cấu hình shell của bạn (ví dụ: .bashrc nếu bạn dùng Bash)
+nano ~/.bashrc
+
+# Hoặc nếu bạn dùng Zsh
+# nano ~/.zshrc
+
+# Thêm các dòng sau vào cuối file:
+
+# Kiểm tra xem Redis server có đang chạy không và khởi động nếu chưa
+if ! systemctl is-active --quiet redis-server.service; then
+  echo "Khởi động Redis server..."
+  sudo systemctl start redis-server
+fi
+
+# Lưu các thay đổi và đóng file (Ctrl+X, sau đó Y để xác nhận và Enter).
+
+## Bước 8: Áp dụng các thay đổi (chạy trong terminal WSL hiện tại)
+source ~/.bashrc
+# Hoặc nếu bạn dùng Zsh
+# source ~/.zshrc
+
+# Giải thích:
+# - Các lệnh từ Bước 1 đến Bước 5 cài đặt và đảm bảo Redis server chạy và được cấu hình để tự động khởi động khi WSL khởi động lại.
+# - Bước 7 thêm một đoạn script vào file cấu hình shell của bạn. Mỗi khi bạn mở một terminal WSL mới, script này sẽ kiểm tra xem dịch vụ `redis-server.service` có đang chạy không. Nếu không, nó sẽ cố gắng khởi động nó.
+# - Bước 8 áp dụng các thay đổi bạn vừa thực hiện trong file cấu hình shell cho phiên terminal hiện tại.
+
+# Lưu ý quan trọng:
+# - Việc sử dụng `sudo` trong file cấu hình shell có thể yêu cầu bạn nhập mật khẩu mỗi khi một terminal mới được mở.
+# - Nếu bạn không muốn nhập mật khẩu mỗi lần, bạn có thể cân nhắc các phương pháp tự động hóa sudo an toàn hơn, nhưng điều này phức tạp hơn và nằm ngoài phạm vi của hướng dẫn cơ bản này.
+# - Đảm bảo rằng systemd đang chạy trong WSL của bạn để các lệnh `systemctl` hoạt động đúng cách (kiểm tra bằng lệnh `ls -l /sbin/init`).
+
+
+
+# Chạy celery:
+celery -A BE worker --pool=solo --loglevel=info
+hoặc: celery -A BE.celery worker --pool=solo --loglevel=info
